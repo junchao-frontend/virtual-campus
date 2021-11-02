@@ -7,6 +7,10 @@ module.exports = {
     'plugin:vue/essential',
     '@vue/standard'
   ],
+  "globals": {
+    "AMap": "true",
+    "AMapUI":"true",
+  },
   parserOptions: {
     parser: 'babel-eslint'
   },

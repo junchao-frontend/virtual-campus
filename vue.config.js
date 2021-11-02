@@ -1,7 +1,8 @@
 module.exports = {
   configureWebpack: {
     externals: {
-      AMap: 'AMap'
+      AMap: 'AMap',
+      AMapUI: 'AMapUI'
     }
   }
 }

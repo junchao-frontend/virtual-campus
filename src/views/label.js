@@ -1491,7 +1491,7 @@ const amap = {
       },
       buildingsLabel: {
         name: '标签',
-        positionIcon: 'http://localhost:8080/red_icon.png',
+        positionIcon: 'http://42.193.99.32:9800/school/web_Red_icon.png',
         // infoBody: ,
         data: [
           {
@@ -1499,7 +1499,7 @@ const amap = {
             lnglatCenter: [114.748553, 36.713383],
             code: '1',
             iphone: '0310-8578786',
-            introduce: '介绍',
+            introduce: '介绍1',
             img:
                 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fi.qqkou.com%2Fi%2F2a213556377x1738794267b26.jpg&refer=http%3A%2F%2Fi.qqkou.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1638274092&t=a9c3bb71f10d43e849e175e509543ca0'
           },
@@ -1508,7 +1508,7 @@ const amap = {
             lnglatCenter: [114.71657, 36.72527],
             code: '2',
             iphone: '0310-8578786',
-            introduce: '介绍',
+            introduce: '介绍2',
             img:
                 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fi.qqkou.com%2Fi%2F2a213556377x1738794267b26.jpg&refer=http%3A%2F%2Fi.qqkou.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1638274092&t=a9c3bb71f10d43e849e175e509543ca0'
           },

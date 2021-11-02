@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+
+	<style>
+        .el-radio__inner{
+            width: 24px;
+            height: 24px;
+            position: relative;
+        }
+        .el-radio__input.is-checked .el-radio__inner::after{
+            z-index: 1;
+            content: '';
+            width: 8px;
+            height: 12px;
+            border-radius: 0;
+            border-bottom: 2px solid #fff;
+            border-right: 2px solid #fff;
+            transform:rotate(46deg);
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            background-color: rgba(255, 255, 255, 0);
+        }
+        #radio1 .el-radio__input.is-checked .el-radio__inner{
+            background-color: lightsalmon;
+            z-index: -1;
+            border: 0;
+        }
+        #radio1  .el-radio__input .el-radio__inner{
+            background-color: lightsalmon;
+            z-index: -1;
+            border: 0;
+        }
+
+        #radio2 .el-radio__input.is-checked .el-radio__inner{
+            background-color: lightblue;
+            z-index: -1;
+            border: 0;
+        }
+        #radio2  .el-radio__input .el-radio__inner{
+            background-color: lightblue;
+            z-index: -1;
+            border: 0;
+        }
+        #radio3 .el-radio__input.is-checked .el-radio__inner{
+            background-color: lightgreen;
+            z-index: -1;
+            border: 0;
+        }
+        #radio3  .el-radio__input .el-radio__inner{
+            background-color: lightgreen;
+            z-index: -1;
+            border: 0;
+        }
+        #radio4 .el-radio__input.is-checked .el-radio__inner{
+            background-color: lightsalmon;
+            z-index: -1;
+            border: 0;
+        }
+        #radio4  .el-radio__input .el-radio__inner{
+            background-color: lightsalmon;
+            z-index: -1;
+            border: 0;
+        }
+    </style>
+</head>
+<body >
+    <div id="test">
+        <el-radio-group v-model="radio">
+            <el-radio id="radio1" :label="3">备选项</el-radio>
+            <el-radio id="radio2" :label="6">备选项</el-radio>
+            <el-radio id="radio3" :label="9">备选项</el-radio>
+          </el-radio-group>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    const vue = new Vue({
+        el:'#test',
+        data:{
+            radio: 3
+        }
+    })
+</script>
+</html>
