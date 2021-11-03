@@ -1,37 +1,106 @@
 <template>
+  <div class="main">
     <div id="container">
-      <div class="radios-wrap " :class="direction === 'left'?'fold':''">
+    </div>
+    <div class="radios-wrap" :class="direction === 'left'?'fold':''">
         <div class="control-icon" @click="changeDirection()">
           <i :class="`el-icon-d-arrow-${direction}`"></i>
         </div>
-        <el-radio-group v-model="radio">
-            <el-radio id="radio1" :label="1">标签</el-radio>
-            <el-radio id="radio2" :label="2">宿舍</el-radio>
-            <el-radio id="radio3" :label="3">学院</el-radio>
-            <el-radio id="radio4" :label="4">超市</el-radio>
-            <el-radio id="radio5" :label="5">教室</el-radio>
-            <el-radio id="radio6" :label="6">行政</el-radio>
-            <el-radio id="radio7" :label="7">食堂</el-radio>
-            <el-radio id="radio8" :label="8">体育</el-radio>
+        <!-- <el-radio-group v-model="radio">
+            <el-radio id="radio1" :label="1" @change="changeLabel('3D-1')">标签</el-radio>
+            <el-radio id="radio2" :label="2" @change="changeLabel('3D-2')">宿舍</el-radio>
+            <el-radio id="radio3" :label="3" @change="changeLabel('3D-3')">学院</el-radio>
+            <el-radio id="radio4" :label="4" @change="changeLabel('3D-4')">超市</el-radio>
+            <el-radio id="radio5" :label="5" @change="changeLabel('3D-5')">教室</el-radio>
+            <el-radio id="radio6" :label="6" @change="changeLabel('3D-6')">行政</el-radio>
+            <el-radio id="radio7" :label="7" @change="changeLabel('3D-7')">食堂</el-radio>
+            <el-radio id="radio8" :label="8" @change="changeLabel('3D-8')">体育</el-radio>
+          </el-radio-group> -->
+          <el-radio-group v-model="radio">
+            <el-radio
+            v-for="item in labels"
+            :key="item.label"
+            :label="item.label"
+            :id="item.style"
+            @change="changeLabel(item.modelLabel)"
+            >{{item.value}}
+            </el-radio>
           </el-radio-group>
     </div>
+    <div class="pattern">
+      <div class="leftpattern" :class="checkedModel? 'patternChecked':''" @click="[changeModel('2D'),checkedModel=!checkedModel]">2D</div>
+      <div class="rightpattern" :class="checkedModel? '':'patternChecked'" @click="[changeModel('3D'),checkedModel=!checkedModel]">3D</div>
     </div>
+  </div>
 </template>
 
 <script>
+import { initData } from '../api/schooldata'
 import AMap from 'AMap'
-import { amap } from './label.js'
 export default {
   components: {},
   data () {
     return {
+      checkedModel: false,
+      labels: [
+        {
+          label: '1',
+          value: '标签',
+          style: 'radio1',
+          modelLabel: '3D-1'
+        },
+        {
+          label: '2',
+          value: '宿舍',
+          style: 'radio2',
+          modelLabel: '3D-2'
+        },
+        {
+          label: '3',
+          value: '学院',
+          style: 'radio3',
+          modelLabel: '3D-3'
+        },
+        {
+          label: '4',
+          value: '超市',
+          style: 'radio4',
+          modelLabel: '3D-4'
+        },
+        {
+          label: '5',
+          value: '教室',
+          style: 'radio5',
+          modelLabel: '3D-5'
+        },
+        {
+          label: '6',
+          value: '行政',
+          style: 'radio6',
+          modelLabel: '3D-6'
+        },
+        {
+          label: '7',
+          value: '食堂',
+          style: 'radio7',
+          modelLabel: '3D-7'
+        },
+        {
+          label: '8',
+          value: '体育',
+          style: 'radio8',
+          modelLabel: '3D-8'
+        }
+      ],
       map: null,
       imageLayer: null,
       // infoWindows: [],
-      markers: [],
-      radio: 3,
-      infoWindow: '',
-      direction: 'right'
+      markers: [], // 点位集合
+      radio: '1', // 标签绑定
+      infoWindow: '', // 信息窗体
+      direction: 'right',
+      pointsData: [], // 存入接口数据
+      mapModel: '3D' // 通过mapmodel判断现在是在2D还是在3D
     }
   },
   computed: {
@@ -39,9 +108,29 @@ export default {
   created () {},
   mounted () {
     // console.log(amap)
-    this.initMap()
+    this.initSchoolData() // 调取服务器接口函数
   },
   methods: {
+    // 改变模型函数 2D或3D
+    changeModel (a) {
+      if (a === '2D') {
+        this.map.clearMap()
+        this.map.destroy() // 销毁之前地图
+        this.initMap(a) // 加载新地图
+        this.radio = '1'
+        this.mapModel = '2D'
+        this.addLabelMarker('2D')
+      } else {
+        this.map.clearMap()
+        this.map.destroy()
+        this.initMap(a)
+        this.radio = '1'
+        this.mapModel = '3D'
+        // 添加点标记
+        this.addLabelMarker('3D')
+      }
+    },
+    // 改变标签方向
     changeDirection () {
       if (this.direction === 'right') {
         this.direction = 'left'
@@ -49,62 +138,99 @@ export default {
         this.direction = 'right'
       }
     },
-    initMap () {
-      // 插入自定义学校图层
-      this.imageLayer = new AMap.ImageLayer({
-        url: 'http://81.68.73.55/group1/M00/00/34/rBEAA2F7qfWABW2JAGdJS_oe5RU086.jpg',
-        bounds: new AMap.Bounds(
-          // [114.584546, 36.64932],
-          // [114.607666, 36.660785]
-          [114.588403, 36.649755], // 左下角
-          [114.908403, 36.780195] // 右上角
-        )
-        // zooms: [5, 10]
-      })
-      // 初始化地图
-      this.map = new AMap.Map('container', {
-        center: [114.748403, 36.714965],
-        // center: [114.59698, 36.653994],
-        resizeEnable: true, // 是否监控地图容器尺寸变化
-        // mapStyle: 'amap://styles/normal',
-        zoom: 14,
-        zooms: [12.8, 16],
-        showLabel: false,
-        layers: [
-          new AMap.TileLayer(),
-          this.imageLayer
-        ]
-      })
-      // 添加点标记
-      this.addMarker()
-      // 点击地图关闭信息窗体
-      // this.map.on('click', this.markerClose)
-
-      // -------------------
-      // 获取当前鼠标点击坐标
-      // this.map.on('click', (e) => {
-      //   console.log(e)
-      //   // this.lngMain = e.lnglat.getLng()
-      //   // this.latMain = e.lnglat.getLat()
-      // })
+    // 切换建筑不同点位
+    changeLabel (e) {
+      // console.log(e, '--------')
+      if (e === '3D-1' && this.mapModel === '3D') {
+        this.map.remove(this.markers)
+        var newdata = this.pointsData.threeD.labels.buildingsLabel
+        this.newpoint(newdata) // 加载新点位函数
+      }
+      if (e === '3D-1' && this.mapModel === '2D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.twoD.labels.buildingsLabel
+        this.newpoint(newdata)
+      }
+      if (e === '3D-2' && this.mapModel === '3D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.threeD.labels.dormitory
+        this.newpoint(newdata)
+      }
+      if (e === '3D-2' && this.mapModel === '2D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.twoD.labels.dormitory
+        this.newpoint(newdata)
+      }
+      if (e === '3D-3' && this.mapModel === '3D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.threeD.labels.college
+        this.newpoint(newdata)
+      }
+      if (e === '3D-3' && this.mapModel === '2D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.twoD.labels.college
+        this.newpoint(newdata)
+      }
+      if (e === '3D-4' && this.mapModel === '3D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.threeD.labels.supermarket
+        this.newpoint(newdata)
+      }
+      if (e === '3D-4' && this.mapModel === '2D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.twoD.labels.supermarket
+        this.newpoint(newdata)
+      }
+      if (e === '3D-5' && this.mapModel === '3D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.threeD.labels.classroom
+        this.newpoint(newdata)
+      }
+      if (e === '3D-5' && this.mapModel === '2D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.twoD.labels.classroom
+        this.newpoint(newdata)
+      }
+      if (e === '3D-6' && this.mapModel === '3D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.threeD.labels.administration
+        this.newpoint(newdata)
+      }
+      if (e === '3D-6' && this.mapModel === '2D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.twoD.labels.administration
+        this.newpoint(newdata)
+      }
+      if (e === '3D-7' && this.mapModel === '3D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.threeD.labels.restaurant
+        this.newpoint(newdata)
+      }
+      if (e === '3D-7' && this.mapModel === '2D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.twoD.labels.restaurant
+        this.newpoint(newdata)
+      }
+      if (e === '3D-8' && this.mapModel === '3D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.threeD.labels.sports
+        this.newpoint(newdata)
+      }
+      if (e === '3D-8' && this.mapModel === '2D') {
+        this.map.remove(this.markers)
+        newdata = this.pointsData.twoD.labels.sports
+        this.newpoint(newdata)
+      }
     },
-    // markerClose () {
-    //   if (this.infoWindow !== '') {
-    //     this.infoWindow.close()
-    //   }
-    //   this.infoWindow = ''
-    // },
-    addMarker () {
-      var pointData = amap.threeD.labels.buildingsLabel.data
-      // var test = []
-      // console.log(pointData)
+    // 加载切换标签后的新点位
+    newpoint (a) {
       AMapUI.loadUI(['overlay/SimpleInfoWindow'], (SimpleInfoWindow) => {
-        pointData.forEach(item => {
+        a.data.forEach(item => {
           var marker = new AMap.Marker({
             map: this.map,
             icon: new AMap.Icon({
               size: new AMap.Size(20, 30),
-              image: amap.threeD.labels.buildingsLabel.positionIcon,
+              image: a.positionIcon,
               imageSize: new AMap.Size(18, 24)
             }),
             position: item.lnglatCenter // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
@@ -115,16 +241,31 @@ export default {
             content: item.name, // 设置文本标注内容
             direction: 'top' // 设置文本标注方位
           })
-          // marker.content = item.introduce
-          // 鼠标点击marker弹出自定义的信息窗体
-          // console.log(pointData)
-
-          // console.log(item.code)
           var infoWindow = new SimpleInfoWindow({
             infoTitle: item.name,
-            infoBody: '<p class="my-desc"><strong>这里是内容。</strong> <br/> 高德地图 JavaScript API，是由 JavaScript 语言编写的应用程序接口，' +
-                '它能够帮助您在网站或移动端中构建功能丰富、交互性强的地图应用程序</p>' +
-                `名称：${item.name}`,
+            infoBody: `
+            <div class="info-warp">
+            <img align= 'left' class='infoImage' src="${item.img}">
+            <span class="infoText">${item.introduce}</span>
+            <div class="infoBottom">
+            <div class="small-box">
+            <i class="iconfont gaode-jiantou_youshang"></i>
+            <span class="smallbox-text">从这</span>
+            </div>
+            <div class="small-box">
+            <i class="iconfont gaode-jiantou_youxia"></i>
+            <span class="smallbox-text">到这</span>
+            </div>
+            <div class="small-box">
+            <i class="iconfont gaode-quanjing"></i>
+            <span class="smallbox-text">全景</span>
+            </div>
+            <div class="small-box">
+            <i class="iconfont gaode-16"></i>
+            <span class="smallbox-text">详情</span>
+            </div>
+            </div>
+            </div>`,
             // 基点指向marker的头部位置
             offset: new AMap.Pixel(0, -31)
           })
@@ -133,15 +274,143 @@ export default {
             infoWindow.open(this.map, e.target.getPosition())
             this.infoWindow = infoWindow
           }
-          // eslint-disable-next-line no-use-before-define
           marker.on('click', markerClick)
-        // this.infoWindows.push(infoWindow
         })
-
-        // console.log(item)
       })
-      // console.log(pointData)
-      // marker.setTitle('我是marker的title')
+    },
+    initSchoolData () {
+      initData().then(res => {
+        // console.log(res)
+        this.pointsData = res.data.data
+        // 等拿到数据之后再初始化地图
+        this.initMap('3D')
+        // 添加点标记
+        this.addLabelMarker('3D')
+        // console.log(this.pointsData)
+      })
+    },
+    // 初始化地图
+    initMap (model) {
+      // 通过model接受是2D模型还是3D模型
+      // 通过判断model 定义不同的bounds和center
+      // console.log(this.pointsData.threeD)
+      if (model === '3D') {
+        var bounds = this.pointsData.threeD.bounds
+        var imgUrl = this.pointsData.threeD.url
+        var center = this.pointsData.threeD.center
+        var holes = this.pointsData.threeD.holes
+        var zoom = this.pointsData.threeD.zoom
+        var zooms = this.pointsData.threeD.zooms
+      } else if (model === '2D') {
+        bounds = this.pointsData.twoD.bounds
+        imgUrl = this.pointsData.twoD.url
+        center = this.pointsData.twoD.center
+        holes = this.pointsData.twoD.holes
+        zoom = this.pointsData.twoD.zoom
+        zooms = this.pointsData.twoD.zooms
+      }
+      // 插入自定义学校图层
+      this.imageLayer = new AMap.ImageLayer({
+        url: imgUrl,
+        bounds: new AMap.Bounds(
+          bounds[0], // 左下角
+          bounds[1] // 右上角
+        )
+        // zooms: [5, 10]
+      })
+      // 初始化地图
+      this.map = new AMap.Map('container', {
+        center: center,
+        // center: [114.59698, 36.653994],
+        resizeEnable: true, // 是否监控地图容器尺寸变化
+        // mapStyle: 'amap://styles/normal',
+        zoom: zoom,
+        zooms: zooms,
+        holes: [holes],
+        showLabel: false,
+        layers: [
+          new AMap.TileLayer(),
+          this.imageLayer
+        ]
+      })
+      // 点击地图关闭信息窗体
+      this.map.on('click', this.markerClose)
+
+      // -------------------
+      // 获取当前鼠标点击坐标
+      // this.map.on('click', (e) => {
+      //   console.log(e)
+      //   // this.lngMain = e.lnglat.getLng()
+      //   // this.latMain = e.lnglat.getLat()
+      // })
+    },
+    // 点击地图任意一点关闭信息窗体
+    markerClose () {
+      if (this.infoWindow !== '') {
+        this.infoWindow.close()
+      }
+      this.infoWindow = ''
+    },
+    // 添加初始所有建筑点位
+    addLabelMarker (model) {
+      if (model === '3D') {
+        var pointData = this.pointsData.threeD.labels.buildingsLabel.data
+      } else if (model === '2D') {
+        pointData = this.pointsData.twoD.labels.buildingsLabel.data
+      }
+      AMapUI.loadUI(['overlay/SimpleInfoWindow'], (SimpleInfoWindow) => {
+        pointData.forEach(item => {
+          var marker = new AMap.Marker({
+            map: this.map,
+            icon: new AMap.Icon({
+              size: new AMap.Size(20, 30),
+              image: this.pointsData.threeD.labels.buildingsLabel.positionIcon,
+              imageSize: new AMap.Size(18, 24)
+            }),
+            position: item.lnglatCenter // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
+          })
+          this.markers.push(marker)
+          // 设置点标记文本内容
+          marker.setLabel({
+            content: item.name, // 设置文本标注内容
+            direction: 'top' // 设置文本标注方位
+          })
+          var infoWindow = new SimpleInfoWindow({
+            infoTitle: item.name,
+            infoBody: `
+            <div class="info-warp">
+            <img align= 'left' class='infoImage' src="${item.img}">
+            <span class="infoText">${item.introduce}</span>
+            <div class="infoBottom">
+            <div class="small-box">
+            <i class="iconfont gaode-jiantou_youshang"></i>
+            <span class="smallbox-text">从这</span>
+            </div>
+            <div class="small-box">
+            <i class="iconfont gaode-jiantou_youxia"></i>
+            <span class="smallbox-text">到这</span>
+            </div>
+            <div class="small-box">
+            <i class="iconfont gaode-quanjing"></i>
+            <span class="smallbox-text">全景</span>
+            </div>
+            <div class="small-box">
+            <i class="iconfont gaode-16"></i>
+            <span class="smallbox-text">详情</span>
+            </div>
+            </div>
+            </div>`,
+            // 基点指向marker的头部位置
+            offset: new AMap.Pixel(0, -31)
+          })
+          // 自定义信息窗体
+          var markerClick = (e) => {
+            infoWindow.open(this.map, e.target.getPosition())
+            this.infoWindow = infoWindow
+          }
+          marker.on('click', markerClick)
+        })
+      })
     }
   }
 }
@@ -239,9 +508,53 @@ $radios-map:(
 }
 </style>
 <style lang='less' scoped>
+.main{
+  height: 100%;
+}
 #container{
   width: 100%;
   height: 100%;
+}
+/deep/.info-warp{
+    padding: 5px;
+  }
+.pattern{
+  display: flex;
+  z-index: 1999;
+  position: fixed;
+  top: 20px;
+  left: 10px;
+  width: 65px;
+  height: 30px;
+  // background-color: rgb(164,0,0);
+  .patternChecked{
+    background-color: rgb(199, 66, 66) !important;
+  }
+  .leftpattern{
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: white;
+    width: 30px;
+    height: 100%;
+    background-color: rgb(164,0,0);
+  }
+  .rightpattern{
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: white;
+    margin-left: 3px;
+    width: 30px;
+    height: 100%;
+    background-color: rgb(164,0,0);
+  }
 }
 /deep/ .amap-marker-label {
     text-shadow:
@@ -253,21 +566,6 @@ $radios-map:(
      -1px -1px 1px #ffffff,
      -1px -1px 1px #ffffff,
      -1px -1px 1px #ffffff;
-    // 0 0 20px #fff,
-    // 0 0 30px #fff,
-    // 0 0 40px #00a67c,
-    // 0 0 70px #00a67c,
-    // 0 0 80px #00a67c,
-    // 0 0 100px #00a67c,
-    // 0 0 150px #00a67c;
-    // 0 0 1px #fff,
-    // 0 0 2px #fff,
-    // 0 0 3px #fff,
-    // 0 0 4px #00a67c,
-    // 0 0 7px #00a67c,
-    // 0 0 5px #00a67c,
-    // 0 0 5px #00a67c,
-    // 0 0 5px #00a67c;
     color:rgb(157, 33, 37);
     // position: absolute;
     font-weight: 1000;
@@ -290,14 +588,43 @@ $radios-map:(
   border: 0;
   padding: 0;
 }
+/deep/.infoImage{
+  // display: inline;
+  margin-right: 4px;
+  width: 60px;
+  height: 60px;
+}
+/deep/.infoText{
+  font-size: 10px;
+}
+/deep/.infoBottom{
+  display: flex;
+  justify-content: space-around;
+  margin-top: 7px;
+  width: 100%;
+}
+/deep/.small-box{
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  height: 20px;
+  width: 46px;
+}
+/deep/.smallbox-text{
+  margin-left: 4px;
+  font-size: 13px;
+}
+/deep/.infoBottom div:hover{
+  color:rgba(255, 0, 0, 0.75);
+  }
  .content-window-card {
-            position: relative;
-            box-shadow: none;
-            bottom: 0;
-            left: 0;
-            width: auto;
-            padding: 0;
-        }
+  position: relative;
+  box-shadow: none;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  padding: 0;
+}
 
   .content-window-card p {
       height: 2rem;
