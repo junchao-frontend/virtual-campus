@@ -31,17 +31,35 @@
       <div class="leftpattern" :class="checkedModel? 'patternChecked':''" @click="[changeModel('2D'),checkedModel=!checkedModel]">2D</div>
       <div class="rightpattern" :class="checkedModel? '':'patternChecked'" @click="[changeModel('3D'),checkedModel=!checkedModel]">3D</div>
     </div>
+    <!-- <el-dialog
+    :visible.sync="centerDialogVisible"
+    :open="openPno"
+    top="5%"
+    width="1000px"
+    center> -->
+    <div id="photosphere" class="photosphere"  v-show="showPhoto">
+      <div class="close-icon" @click="showPhoto = !showPhoto"><i class="el-icon-close" style="font-size: 20px;color:rgb(46,49,40)" /></div>
+    </div>
+  <!-- </el-dialog> -->
   </div>
 </template>
 
 <script>
+import { Viewer } from 'photo-sphere-viewer'
 import { initData } from '../api/schooldata'
 import AMap from 'AMap'
 export default {
   components: {},
   data () {
     return {
+      panoramadata: null,
+      isPhoto: false,
+      showPhoto: false,
+      // Zindex: '1',
+      img: require('../assets/南_看图王.jpg'),
+      // photosphere: 'photosphere',
       checkedModel: false,
+      centerDialogVisible: false,
       labels: [
         {
           label: '1',
@@ -93,6 +111,7 @@ export default {
         }
       ],
       map: null,
+      polyline: null, // 线
       imageLayer: null,
       // infoWindows: [],
       markers: [], // 点位集合
@@ -105,10 +124,16 @@ export default {
   },
   computed: {
   },
+  watch: {
+  },
   created () {},
   mounted () {
+    // this.initPhoto()
     // console.log(amap)
     this.initSchoolData() // 调取服务器接口函数
+    // this.$nextTick(() => {
+    //   this.test()
+    // })
   },
   methods: {
     // 改变模型函数 2D或3D
@@ -333,6 +358,20 @@ export default {
           this.imageLayer
         ]
       })
+      var path = [
+        [114.748403, 36.704386],
+        [114.705101, 36.705367],
+        [114.694143, 36.714763],
+        [114.697433, 36.725668],
+        [114.701532, 36.725547]
+      ]
+      var polyline = new AMap.Polyline({
+        path: path,            // 设置线覆盖物路径
+        showDir: true,
+        strokeColor: '#3366bb',   // 线颜色
+        strokeWeight: 10           // 线宽
+      })
+      this.map.add([polyline])
       // 点击地图关闭信息窗体
       this.map.on('click', this.markerClose)
 
@@ -390,16 +429,17 @@ export default {
             <i class="iconfont gaode-jiantou_youxia"></i>
             <span class="smallbox-text">到这</span>
             </div>
-            <div class="small-box">
+            <div class="small-box" onclick="openPSV()">
             <i class="iconfont gaode-quanjing"></i>
             <span class="smallbox-text">全景</span>
             </div>
-            <div class="small-box">
+            <div class="small-box" onclick="See()">
             <i class="iconfont gaode-16"></i>
             <span class="smallbox-text">详情</span>
             </div>
             </div>
-            </div>`,
+            </div>
+            `,
             // 基点指向marker的头部位置
             offset: new AMap.Pixel(0, -31)
           })
@@ -408,12 +448,47 @@ export default {
             infoWindow.open(this.map, e.target.getPosition())
             this.infoWindow = infoWindow
           }
+          window.openPSV = () => {
+            this.showPhoto = true
+            this.$nextTick(() => {
+              this.initPhoto()
+            })
+            // console.log(document.getElementById('photosphere'))
+          }
+          window.See = () => {
+            window.open('http://xindian.hebeu.edu.cn/', '_blank')
+            // console.log(document.getElementById('photosphere'))
+          }
           marker.on('click', markerClick)
         })
       })
+    },
+    initPhoto () {
+      // console.log(document.getElementById('photosphere'))
+      this.panoramadata = new Viewer({
+        container: document.getElementById('photosphere'),
+        panorama: this.img,
+        size: {
+          width: '100%',
+          height: '100%'
+        }
+      })
     }
+    // 打开全景
+    // window.openPSV = () => {
+    //   console.log('111')
+    // },
+    // test () {
+    //   var oDiv = document.getElementById('PSV')
+    //   console.log(oDiv)
+    //   oDiv.onclick = function () {
+    //     console.log('isClick')
+    //     this.centerDialogVisible = true
+    //   }
+    // }
   }
 }
+
 </script>
 <style lang="scss" scoped>
 $radios-map:(
@@ -508,6 +583,22 @@ $radios-map:(
 }
 </style>
 <style lang='less' scoped>
+#photosphere{
+  z-index: 2000;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+}
+.close-icon{
+  z-index: 2001;
+  position: absolute;
+  right: 5px;
+  top: 4px;
+  cursor: pointer;
+  // font-size: 16px ;
+}
 .main{
   height: 100%;
 }
@@ -587,6 +678,17 @@ $radios-map:(
 /deep/ .amap-ui-smp-ifwn-content-body{
   border: 0;
   padding: 0;
+}
+/deep/.el-dialog {
+    height: 600px;
+    position: fixed;
+    // top:5%;
+    left:16%;
+    // margin:-200px -400px;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+    box-sizing: border-box;
+    // width:1000px
 }
 /deep/.infoImage{
   // display: inline;
