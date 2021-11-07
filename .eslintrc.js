@@ -7,9 +7,9 @@ module.exports = {
     'plugin:vue/essential',
     '@vue/standard'
   ],
-  "globals": {
-    "AMap": "true",
-    "AMapUI":"true",
+  globals: {
+    AMap: 'true',
+    AMapUI: 'true'
   },
   parserOptions: {
     parser: 'babel-eslint'
@@ -17,6 +17,6 @@ module.exports = {
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'no-multi-spaces':'off'
+    'no-multi-spaces': 'off'
   }
 }

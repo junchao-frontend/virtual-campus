@@ -6,16 +6,6 @@
         <div class="control-icon" @click="changeDirection()">
           <i :class="`el-icon-d-arrow-${direction}`"></i>
         </div>
-        <!-- <el-radio-group v-model="radio">
-            <el-radio id="radio1" :label="1" @change="changeLabel('3D-1')">标签</el-radio>
-            <el-radio id="radio2" :label="2" @change="changeLabel('3D-2')">宿舍</el-radio>
-            <el-radio id="radio3" :label="3" @change="changeLabel('3D-3')">学院</el-radio>
-            <el-radio id="radio4" :label="4" @change="changeLabel('3D-4')">超市</el-radio>
-            <el-radio id="radio5" :label="5" @change="changeLabel('3D-5')">教室</el-radio>
-            <el-radio id="radio6" :label="6" @change="changeLabel('3D-6')">行政</el-radio>
-            <el-radio id="radio7" :label="7" @change="changeLabel('3D-7')">食堂</el-radio>
-            <el-radio id="radio8" :label="8" @change="changeLabel('3D-8')">体育</el-radio>
-          </el-radio-group> -->
           <el-radio-group v-model="radio">
             <el-radio
             v-for="item in labels"
@@ -31,14 +21,33 @@
       <div class="leftpattern" :class="checkedModel? 'patternChecked':''" @click="[changeModel('2D'),checkedModel=!checkedModel]">2D</div>
       <div class="rightpattern" :class="checkedModel? '':'patternChecked'" @click="[changeModel('3D'),checkedModel=!checkedModel]">3D</div>
     </div>
-    <!-- <el-dialog
-    :visible.sync="centerDialogVisible"
-    :open="openPno"
-    top="5%"
-    width="1000px"
-    center> -->
     <div id="photosphere" class="photosphere"  v-show="showPhoto">
       <div class="close-icon" @click="showPhoto = !showPhoto"><i class="el-icon-close" style="font-size: 20px;color:rgb(46,49,40)" /></div>
+    </div>
+    <div class="box" v-show="showNav">
+       <div class="nav-icon" @click="showNav = !showNav"><i class="el-icon-close" style="font-size: 20px;color:rgb(237,248,255)" /></div>
+      <div class="head">
+        <div class="method-icon" @click="changeRransportation('car')">
+          <i style="font-size:25px;color:rgb(158,201,254)" :style="checkedCar" class="iconfont gaode-icon" />
+        </div>
+        <div class="method-icon" @click="changeRransportation('bike')">
+          <i style="font-size:25px;color:rgb(158,201,254)" :style="checkedBike" class="iconfont gaode-zixingche" />
+        </div>
+        <div class="method-icon" @click="changeRransportation('foot')">
+          <i style="font-size:25px;color:rgb(158,201,254)" :style="checkedFoot" class="iconfont gaode-fanshe" />
+        </div>
+      </div>
+      <div class="body">
+        <div class="start">
+          <span style="font-size:14px;color:rgb(255,255,255)">起点</span><el-input v-model="startInfo" placeholder="请选择起点" clearable></el-input>
+        </div>
+        <div class="end">
+          <span style="font-size:14px;color:rgb(255,255,255)">终点</span><el-input v-model="endInfo" placeholder="请选择终点" clearable></el-input>
+        </div>
+      </div>
+      <div class="bottom">
+        <el-button class="select-button" @click="toPlace(allPath)">{{transportation}}</el-button>
+      </div>
     </div>
   <!-- </el-dialog> -->
   </div>
@@ -46,19 +55,37 @@
 
 <script>
 import { Viewer } from 'photo-sphere-viewer'
-import { initData } from '../api/schooldata'
+import { initData, getPath } from '../api/schooldata'
 import AMap from 'AMap'
 export default {
   components: {},
   data () {
     return {
+      middleInfo: '',
+      transportation: '开车去', // 导航交通方式
       panoramadata: null,
-      isPhoto: false,
+      isPhoto: false, // 是否展示全景
+      showNav: false, // 是否展示导航
+      startInfo: '', // 导航起点
+      endInfo: '', // 导航终点
       showPhoto: false,
       // Zindex: '1',
       img: require('../assets/南_看图王.jpg'),
       // photosphere: 'photosphere',
-      checkedModel: false,
+      checkedMethod: false,
+      middlePath: {
+        startNode: '',
+        endNode: ''
+      },
+      allPath: {
+        startNode: '',
+        endNode: ''
+      },
+      pathNode: [],
+      checkedCar: 'color:white', // 导航图标样式
+      checkedBike: '',
+      checkedFoot: '',
+      checkedModel: false, // 2D 3D颜色转换
       centerDialogVisible: false,
       labels: [
         {
@@ -358,20 +385,6 @@ export default {
           this.imageLayer
         ]
       })
-      var path = [
-        [114.748403, 36.704386],
-        [114.705101, 36.705367],
-        [114.694143, 36.714763],
-        [114.697433, 36.725668],
-        [114.701532, 36.725547]
-      ]
-      var polyline = new AMap.Polyline({
-        path: path,            // 设置线覆盖物路径
-        showDir: true,
-        strokeColor: '#3366bb',   // 线颜色
-        strokeWeight: 10           // 线宽
-      })
-      this.map.add([polyline])
       // 点击地图关闭信息窗体
       this.map.on('click', this.markerClose)
 
@@ -421,11 +434,11 @@ export default {
             <img align= 'left' class='infoImage' src="${item.img}">
             <span class="infoText">${item.introduce}</span>
             <div class="infoBottom">
-            <div class="small-box">
+            <div class="small-box" onclick="openNav()">
             <i class="iconfont gaode-jiantou_youshang"></i>
             <span class="smallbox-text">从这</span>
             </div>
-            <div class="small-box">
+            <div class="small-box" onclick="openNav2()">
             <i class="iconfont gaode-jiantou_youxia"></i>
             <span class="smallbox-text">到这</span>
             </div>
@@ -445,9 +458,14 @@ export default {
           })
           // 自定义信息窗体
           var markerClick = (e) => {
+            // console.log(item)
             infoWindow.open(this.map, e.target.getPosition())
             this.infoWindow = infoWindow
+            this.middleInfo = item.name
+            this.middlePath.startNode = item.lnglatCenter
+            this.middlePath.endNode = item.lnglatCenter
           }
+          // 打开全景函数
           window.openPSV = () => {
             this.showPhoto = true
             this.$nextTick(() => {
@@ -455,6 +473,22 @@ export default {
             })
             // console.log(document.getElementById('photosphere'))
           }
+          // 打开导航函数
+          window.openNav = () => {
+            // console.log(item)
+            this.showNav = true
+            this.startInfo = this.middleInfo
+            this.allPath.startNode = this.middlePath.startNode
+            // console.log(document.getElementById('photosphere'))
+          }
+          window.openNav2 = () => {
+            this.showNav = true
+            this.endInfo = this.middleInfo
+            this.allPath.endNode = this.middlePath.endNode
+            // console.log(this.allPath)
+            // console.log(document.getElementById('photosphere'))
+          }
+          // 打开外部链接函数
           window.See = () => {
             window.open('http://xindian.hebeu.edu.cn/', '_blank')
             // console.log(document.getElementById('photosphere'))
@@ -463,6 +497,7 @@ export default {
         })
       })
     },
+    // 展示全景函数
     initPhoto () {
       // console.log(document.getElementById('photosphere'))
       this.panoramadata = new Viewer({
@@ -473,19 +508,47 @@ export default {
           height: '100%'
         }
       })
+    },
+    // 显示导航路线函数
+    toPlace (a) {
+      // var pathData = a
+      // var test = a.join(',')
+      var fullPath = {}
+      fullPath.startNode = Object.values(a)[0].join(',')
+      fullPath.endNode = Object.values(a)[1].join(',')
+      // console.log(fullPath)
+      getPath(fullPath).then(res => {
+        // console.log(res)
+        this.pathNode = res.data.data.pathNode
+        // console.log(this.pathNode)
+        var polyline = new AMap.Polyline({
+          path: this.pathNode,            // 设置线覆盖物路径
+          showDir: true,
+          strokeColor: '#3366bb',   // 线颜色
+          strokeWeight: 10           // 线宽
+        })
+        this.map.add([polyline])
+      })
+    },
+    // 改变导航交通方式
+    changeRransportation (a) {
+      if (a === 'car') {
+        this.transportation = '开车去'
+        this.checkedCar = 'color:white'
+        this.checkedBike = ''
+        this.checkedFoot = ''
+      } else if (a === 'bike') {
+        this.transportation = '骑车去'
+        this.checkedBike = 'color:white'
+        this.checkedCar = ''
+        this.checkedFoot = ''
+      } else {
+        this.transportation = '走路去'
+        this.checkedFoot = 'color:white'
+        this.checkedBike = ''
+        this.checkedCar = ''
+      }
     }
-    // 打开全景
-    // window.openPSV = () => {
-    //   console.log('111')
-    // },
-    // test () {
-    //   var oDiv = document.getElementById('PSV')
-    //   console.log(oDiv)
-    //   oDiv.onclick = function () {
-    //     console.log('isClick')
-    //     this.centerDialogVisible = true
-    //   }
-    // }
   }
 }
 
@@ -591,11 +654,100 @@ $radios-map:(
   width: 100vw;
   height: 100vh;
 }
+.box{
+  position: fixed;
+  left: 10px;
+  top: 10px;
+  z-index: 9999;
+  padding: 10px 0;
+  // margin-top: 5px;
+  width: 300px;
+  height: 250px;
+  // border: 1px solid red;
+  background-color: rgb(61,147,253);
+  border-radius: 4px;
+  .head{
+  display: flex;
+  justify-content: space-around;
+  height: 35px;
+  .method-icon{
+  cursor: pointer;
+  display: flex;
+  /* text-align: center; */
+  align-items: center;
+}
+}
+.bottom{
+  position: relative;
+  margin-top: 40px;
+  height: 40px;
+  .el-button{
+    border: none;
+    color: white;
+    background-color: rgb(85,159,251);
+  }
+  .select-button{
+    position: absolute;
+    top: 5px;
+    right: 20px;
+  }
+
+}
+.body{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100px;
+  .start{
+  display: flex;
+  align-items: center;
+  margin-top: 25px;
+  padding: 4px;
+  background-color: rgba(0, 0, 0, 0.23);
+  width: 270px;
+  height: 30px;
+  .el-input{
+  width: 200px;
+}
+  /deep/.el-input__inner{
+    color: white;
+    background-color: rgba(125, 134, 146,0);
+    border: none;
+  }
+}
+.end{
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  margin-top: 12px;
+  background-color: rgba(0, 0, 0, 0.23);
+  width: 270px;
+  height: 30px;
+  /deep/.el-input__inner{
+    color: white;
+    background-color: rgba(125, 134, 146,0);
+    border: none;
+  }
+  .el-input{
+  width: 200px;
+}
+}
+}
+}
 .close-icon{
   z-index: 2001;
   position: absolute;
   right: 5px;
   top: 4px;
+  cursor: pointer;
+  // font-size: 16px ;
+}
+.nav-icon{
+  z-index: 2001;
+  position: absolute;
+  right: 1px;
+  top: 1px;
   cursor: pointer;
   // font-size: 16px ;
 }
