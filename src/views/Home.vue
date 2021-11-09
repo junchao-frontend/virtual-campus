@@ -25,7 +25,7 @@
       <div class="close-icon" @click="showPhoto = !showPhoto"><i class="el-icon-close" style="font-size: 20px;color:rgb(46,49,40)" /></div>
     </div>
     <div class="box" v-show="showNav">
-       <div class="nav-icon" @click="showNav = !showNav"><i class="el-icon-close" style="font-size: 20px;color:rgb(237,248,255)" /></div>
+       <div class="nav-icon" @click="colseNav()"><i class="el-icon-close" style="font-size: 20px;color:rgb(237,248,255)" /></div>
       <div class="head">
         <div class="method-icon" @click="changeRransportation('car')">
           <i style="font-size:25px;color:rgb(158,201,254)" :style="checkedCar" class="iconfont gaode-icon" />
@@ -55,6 +55,7 @@
 
 <script>
 import { Viewer } from 'photo-sphere-viewer'
+// eslint-disable-next-line no-unused-vars
 import { initData, getPath } from '../api/schooldata'
 import AMap from 'AMap'
 export default {
@@ -142,8 +143,10 @@ export default {
       imageLayer: null,
       // infoWindows: [],
       markers: [], // 点位集合
+      navmarkers: [], // 起点和终点
       radio: '1', // 标签绑定
       infoWindow: '', // 信息窗体
+      pathSimplifierIns: '', // 导航路线
       direction: 'right',
       pointsData: [], // 存入接口数据
       mapModel: '3D' // 通过mapmodel判断现在是在2D还是在3D
@@ -403,6 +406,14 @@ export default {
       }
       this.infoWindow = ''
     },
+    // 关闭导航窗口
+    colseNav () {
+      this.showNav = !this.showNav
+      this.pathSimplifierIns.hide()
+      this.map.remove(this.navmarkers)
+      this.pathSimplifierIns = ''
+      this.navmarkers = ''
+    },
     // 添加初始所有建筑点位
     addLabelMarker (model) {
       if (model === '3D') {
@@ -513,22 +524,110 @@ export default {
     toPlace (a) {
       // var pathData = a
       // var test = a.join(',')
+      if (this.pathSimplifierIns !== '') {
+        this.pathSimplifierIns.hide()
+      }
+      if (this.navmarkers !== '') {
+        this.map.remove(this.navmarkers)
+      }
       var fullPath = {}
       fullPath.startNode = Object.values(a)[0].join(',')
       fullPath.endNode = Object.values(a)[1].join(',')
       // console.log(fullPath)
       getPath(fullPath).then(res => {
         // console.log(res)
-        this.pathNode = res.data.data.pathNode
-        // console.log(this.pathNode)
-        var polyline = new AMap.Polyline({
-          path: this.pathNode,            // 设置线覆盖物路径
-          showDir: true,
-          strokeColor: '#3366bb',   // 线颜色
-          strokeWeight: 10           // 线宽
+        const navData = res.data.data
+        var navIcon = [
+          {
+            position: navData.pathNode[0],
+            iconUrl: 'http://42.193.99.32:9800/school/web_start_icon.png'
+          },
+          {
+            position: navData.pathNode[navData.pathNode.length - 1],
+            iconUrl: 'http://42.193.99.32:9800/school/web_end_icon.png'
+          }
+        ]
+        // navIcon.push(navData.pathNode[0], navData.pathNode[navData.pathNode.length - 1])
+        // console.log(navIcon)
+        var pathName = navData.name
+        this.pathNode = navData.pathNode
+        AMapUI.load(['ui/misc/PathSimplifier', 'lib/$'], (PathSimplifier, $) => {
+          if (!PathSimplifier.supportCanvas) {
+            alert('当前环境不支持 Canvas！')
+            return
+          }
+          var pathSimplifierIns = new PathSimplifier({
+            zIndex: 100,
+            // autoSetFitView:false,
+            map: this.map, // 所属的地图实例
+            // 导航路线样式
+            renderOptions: {
+              // pathTolerance: 2,
+              // keyPointTolerance: -1,
+              // renderAllPointsIfNumberBelow: 0,
+              // 路线样式
+              pathLineStyle: {
+                lineWidth: 6,
+                strokeStyle: '#f7b538',
+                // borderWidth: 1,
+                // borderStyle: '#cccccc',
+                dirArrowStyle: true
+              },
+              // 飞行器样式
+              pathNavigatorStyle: {
+                pathLinePassedStyle: {
+                  lineWidth: 5,
+                  strokeStyle: '#087ec4',
+                  // borderWidth: 1,
+                  // borderStyle: '#eeeeee',
+                  dirArrowStyle: true
+                }
+              }
+            },
+            getPath: function (pathData, pathIndex) {
+              return pathData.path
+            },
+            getHoverTitle: function (pathData, pathIndex, pointIndex) {
+              if (pointIndex >= 0) {
+              // point
+                return pathData.name + '，点：' + pointIndex + '/' + pathData.path.length
+              }
+
+              return pathData.name + '，点数量' + pathData.path.length
+            }
+            // renderOptions: {
+            //   renderAllPointsIfNumberBelow: 100 // 绘制路线节点，如不需要可设置为-1
+            // }
+          })
+          this.pathSimplifierIns = pathSimplifierIns
+          // 设置数据
+          pathSimplifierIns.setData([{
+            name: pathName,
+            path: this.pathNode
+          }])
+          // 对第一条线路（即索引 0）创建一个巡航器
+          var navg1 = pathSimplifierIns.createPathNavigator(0, {
+            loop: false, // 循环播放
+            speed: 6000 // 巡航速度，单位千米/小时
+          })
+          navg1.start()
+          // 加载起点和终点图标
+          navIcon.forEach(item => {
+            // console.log(item)
+            var navmarker = new AMap.Marker({
+              map: this.map,
+              icon: new AMap.Icon({
+                size: new AMap.Size(20, 30),
+                image: item.iconUrl,
+                imageSize: new AMap.Size(18, 24)
+              }),
+              position: item.position // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
+            })
+            this.navmarkers.push(navmarker)
+          })
         })
-        this.map.add([polyline])
       })
+      // -----------------------------------
     },
     // 改变导航交通方式
     changeRransportation (a) {

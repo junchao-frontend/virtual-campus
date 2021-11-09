@@ -34,13 +34,19 @@ export default {
   components: {},
   data () {
     return {
-      input: '',
-      pathdata: {
-        // eslint-disable-next-line comma-spacing
-        startNode: '114.748403,36.704386',
-        // eslint-disable-next-line comma-spacing
-        endNode: '114.701532,36.725547'
-      }
+      input: ''
+      // pathNode:[
+      //   startpath:{
+      //     position:[114.748403, 36.704386],
+      //     url: ''
+      //     }
+      //           ]
+      // pathdata: {
+      //   // eslint-disable-next-line comma-spacing
+      //   startNode: '114.748403,36.704386',
+      //   // eslint-disable-next-line comma-spacing
+      //   endNode: '114.701532,36.725547'
+      // }
     }
   },
   computed: {},
