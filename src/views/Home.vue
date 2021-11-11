@@ -444,10 +444,14 @@ export default {
     // 关闭导航窗口
     colseNav () {
       this.showNav = !this.showNav
-      this.pathSimplifierIns.hide()
-      this.map.remove(this.navmarkers)
-      this.pathSimplifierIns = null
-      this.navmarkers = []
+      if (this.pathSimplifierIns) {
+        this.pathSimplifierIns.hide()
+        this.map.remove(this.navmarkers)
+        this.pathSimplifierIns = null
+        this.navmarkers = []
+      }
+      this.startInfo = ''
+      this.endInfo = ''
     },
     // 添加初始所有建筑点位
     addLabelMarker (model) {
