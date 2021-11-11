@@ -34,7 +34,7 @@ export default {
   components: {},
   data () {
     return {
-      input: ''
+      input: '1'
       // pathNode:[
       //   startpath:{
       //     position:[114.748403, 36.704386],
