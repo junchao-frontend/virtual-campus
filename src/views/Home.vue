@@ -25,28 +25,30 @@
       <div class="close-icon" @click="showPhoto = !showPhoto"><i class="el-icon-close" style="font-size: 20px;color:rgb(46,49,40)" /></div>
     </div>
     <div class="box" v-show="showNav">
-       <div class="nav-icon" @click="colseNav()"><i class="el-icon-close" style="font-size: 20px;color:rgb(237,248,255)" /></div>
+       <div class="nav-icon" @click="colseNav()"><i class="el-icon-close" style="font-size: 18px;color:rgb(237,248,255)" /></div>
+       <div class="changeBtn" @click="changePosition(startInfo,endInfo)"><i class="iconfont gaode-icon_jiaohuan" style="font-size: 20px;color:white"></i></div>
       <div class="head">
         <div class="method-icon" @click="changeRransportation('car')">
-          <i style="font-size:25px;color:rgb(158,201,254)" :style="checkedCar" class="iconfont gaode-icon" />
+          <i style="font-size:19px;color:rgb(158,201,254)" :style="checkedCar" class="iconfont gaode-icon" />
         </div>
         <div class="method-icon" @click="changeRransportation('bike')">
-          <i style="font-size:25px;color:rgb(158,201,254)" :style="checkedBike" class="iconfont gaode-zixingche" />
+          <i style="font-size:19px;color:rgb(158,201,254)" :style="checkedBike" class="iconfont gaode-zixingche" />
         </div>
         <div class="method-icon" @click="changeRransportation('foot')">
-          <i style="font-size:25px;color:rgb(158,201,254)" :style="checkedFoot" class="iconfont gaode-fanshe" />
+          <i style="font-size:19px;color:rgb(158,201,254)" :style="checkedFoot" class="iconfont gaode-fanshe" />
         </div>
       </div>
       <div class="body">
         <div class="start">
-          <span style="font-size:14px;color:rgb(255,255,255)">起点</span><el-input v-model="startInfo" placeholder="请选择起点" clearable></el-input>
+          <span style="font-size:14px;color:rgb(255,255,255);margin-right:15px;font-size:13px">起</span><el-input v-model="startInfo" placeholder="请选择起点" clearable></el-input>
         </div>
         <div class="end">
-          <span style="font-size:14px;color:rgb(255,255,255)">终点</span><el-input v-model="endInfo" placeholder="请选择终点" clearable></el-input>
+          <span style="font-size:14px;color:rgb(255,255,255);margin-right:15px;font-size:13px">终</span><el-input  v-model="endInfo" placeholder="请选择终点" clearable></el-input>
         </div>
       </div>
       <div class="bottom">
-        <el-button class="select-button" @click="toPlace(allPath)">{{transportation}}</el-button>
+        <a class="removePath" @click="removePath">清除路线</a>
+        <el-button class="select-button" size="small" @click="toPlace(allPath)">{{transportation}}</el-button>
       </div>
     </div>
   <!-- </el-dialog> -->
@@ -139,14 +141,13 @@ export default {
         }
       ],
       map: null,
-      polyline: null, // 线
       imageLayer: null,
       // infoWindows: [],
       markers: [], // 点位集合
       navmarkers: [], // 起点和终点
       radio: '1', // 标签绑定
       infoWindow: '', // 信息窗体
-      pathSimplifierIns: '', // 导航路线
+      pathSimplifierIns: null, // 导航路线
       direction: 'right',
       pointsData: [], // 存入接口数据
       mapModel: '3D' // 通过mapmodel判断现在是在2D还是在3D
@@ -303,31 +304,65 @@ export default {
             <img align= 'left' class='infoImage' src="${item.img}">
             <span class="infoText">${item.introduce}</span>
             <div class="infoBottom">
-            <div class="small-box">
+            <div class="small-box" onclick="openNav()">
             <i class="iconfont gaode-jiantou_youshang"></i>
             <span class="smallbox-text">从这</span>
             </div>
-            <div class="small-box">
+            <div class="small-box" onclick="openNav2()">
             <i class="iconfont gaode-jiantou_youxia"></i>
             <span class="smallbox-text">到这</span>
             </div>
-            <div class="small-box">
+            <div class="small-box" onclick="openPSV()">
             <i class="iconfont gaode-quanjing"></i>
             <span class="smallbox-text">全景</span>
             </div>
-            <div class="small-box">
+            <div class="small-box" onclick="See()">
             <i class="iconfont gaode-16"></i>
             <span class="smallbox-text">详情</span>
             </div>
             </div>
-            </div>`,
+            </div>
+            `,
             // 基点指向marker的头部位置
             offset: new AMap.Pixel(0, -31)
           })
           // 自定义信息窗体
+          // 自定义信息窗体
           var markerClick = (e) => {
+            // console.log(item)
             infoWindow.open(this.map, e.target.getPosition())
             this.infoWindow = infoWindow
+            this.middleInfo = item.name
+            this.middlePath.startNode = item.lnglatCenter
+            this.middlePath.endNode = item.lnglatCenter
+          }
+          // 打开全景函数
+          window.openPSV = () => {
+            this.showPhoto = true
+            this.$nextTick(() => {
+              this.initPhoto()
+            })
+            // console.log(document.getElementById('photosphere'))
+          }
+          // 打开导航函数
+          window.openNav = () => {
+            // console.log(item)
+            this.showNav = true
+            this.startInfo = this.middleInfo
+            this.allPath.startNode = this.middlePath.startNode
+            // console.log(document.getElementById('photosphere'))
+          }
+          window.openNav2 = () => {
+            this.showNav = true
+            this.endInfo = this.middleInfo
+            this.allPath.endNode = this.middlePath.endNode
+            // console.log(this.allPath)
+            // console.log(document.getElementById('photosphere'))
+          }
+          // 打开外部链接函数
+          window.See = () => {
+            window.open('http://xindian.hebeu.edu.cn/', '_blank')
+            // console.log(document.getElementById('photosphere'))
           }
           marker.on('click', markerClick)
         })
@@ -411,8 +446,8 @@ export default {
       this.showNav = !this.showNav
       this.pathSimplifierIns.hide()
       this.map.remove(this.navmarkers)
-      this.pathSimplifierIns = ''
-      this.navmarkers = ''
+      this.pathSimplifierIns = null
+      this.navmarkers = []
     },
     // 添加初始所有建筑点位
     addLabelMarker (model) {
@@ -524,10 +559,10 @@ export default {
     toPlace (a) {
       // var pathData = a
       // var test = a.join(',')
-      if (this.pathSimplifierIns !== '') {
+      if (this.pathSimplifierIns !== null) {
         this.pathSimplifierIns.hide()
       }
-      if (this.navmarkers !== '') {
+      if (this.navmarkers !== []) {
         this.map.remove(this.navmarkers)
       }
       var fullPath = {}
@@ -611,6 +646,8 @@ export default {
             speed: 6000 // 巡航速度，单位千米/小时
           })
           navg1.start()
+          // 导航开始，关闭信息窗体
+          this.infoWindow.close()
           // 加载起点和终点图标
           navIcon.forEach(item => {
             // console.log(item)
@@ -646,6 +683,30 @@ export default {
         this.checkedFoot = 'color:white'
         this.checkedBike = ''
         this.checkedCar = ''
+      }
+    },
+    // 交换导航起点终点
+    changePosition (start, end) {
+      // console.log(this.allPath)
+      var startPoint = start
+      var endPoint = end
+      var startPosition = this.allPath.startNode
+      var endPosition = this.allPath.endNode
+      this.startInfo = endPoint
+      this.endInfo = startPoint
+      this.allPath.startNode = endPosition
+      this.allPath.endNode = startPosition
+    },
+    // 清除路线
+    removePath () {
+      // console.log('1')
+      this.startInfo = ''
+      this.endInfo = ''
+      if (this.pathSimplifierIns) {
+        this.pathSimplifierIns.hide()
+        this.map.remove(this.navmarkers)
+      } else {
+        this.pathSimplifierIns = null
       }
     }
   }
@@ -758,17 +819,26 @@ $radios-map:(
   left: 10px;
   top: 10px;
   z-index: 9999;
-  padding: 10px 0;
+  // padding: 10px 0;
   // margin-top: 5px;
   width: 300px;
-  height: 250px;
+  height: 190px;
   // border: 1px solid red;
   background-color: rgb(61,147,253);
   border-radius: 4px;
+  .changeBtn{
+    cursor: pointer;
+    position: absolute;
+    top: 41%;
+    left: 6px;
+  }
   .head{
+  // background-color: rgb(156,29,34);
   display: flex;
   justify-content: space-around;
-  height: 35px;
+  margin: 3px auto;
+  width: 160px;
+  height: 40px;
   .method-icon{
   cursor: pointer;
   display: flex;
@@ -778,8 +848,21 @@ $radios-map:(
 }
 .bottom{
   position: relative;
-  margin-top: 40px;
-  height: 40px;
+  // width: 238px;
+  // margin: 0 auto;
+  // display: flex;
+  // align-items: center;
+  // justify-content: space-between;
+  margin-top: -9px;
+  height: 30px;
+  .removePath{
+    top: 5px;
+    position: absolute;
+    left: 31px;
+    font-size: 12px;
+    color: white;
+    cursor: pointer;
+  }
   .el-button{
     border: none;
     color: white;
@@ -787,43 +870,49 @@ $radios-map:(
   }
   .select-button{
     position: absolute;
-    top: 5px;
-    right: 20px;
+    // top: 5px;
+    right: 30px;
   }
 
 }
 .body{
+  // margin: 0 auto;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   height: 100px;
   .start{
+  // margin-left: 15px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
-  margin-top: 25px;
+  margin-top: -20px;
   padding: 4px;
-  background-color: rgba(0, 0, 0, 0.23);
-  width: 270px;
-  height: 30px;
+  background-color: rgb(53,135,235);
+  width: 230px;
+  height: 20px;
   .el-input{
   width: 200px;
 }
   /deep/.el-input__inner{
+    font-size: 13px;
     color: white;
     background-color: rgba(125, 134, 146,0);
     border: none;
   }
 }
 .end{
+  margin: 0 auto;
   display: flex;
   align-items: center;
   padding: 4px;
-  margin-top: 12px;
-  background-color: rgba(0, 0, 0, 0.23);
-  width: 270px;
-  height: 30px;
+  margin-top: 5px;
+  background-color: rgb(53,135,235);
+  width: 230px;
+  height: 20px;
   /deep/.el-input__inner{
+    font-size: 13px;
     color: white;
     background-color: rgba(125, 134, 146,0);
     border: none;
@@ -845,8 +934,8 @@ $radios-map:(
 .nav-icon{
   z-index: 2001;
   position: absolute;
-  right: 1px;
-  top: 1px;
+  right: 6px;
+  top: 8px;
   cursor: pointer;
   // font-size: 16px ;
 }
