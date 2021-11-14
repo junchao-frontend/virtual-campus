@@ -22,7 +22,7 @@
       <div class="rightpattern" :class="checkedModel? '':'patternChecked'" @click="[changeModel('3D'),checkedModel=!checkedModel]">3D</div>
     </div>
     <div id="photosphere" class="photosphere"  v-show="showPhoto">
-      <div class="close-icon" @click="showPhoto = !showPhoto"><i class="el-icon-close" style="font-size: 20px;color:rgb(46,49,40)" /></div>
+      <div class="close-icon" @click="[showPhoto = !showPhoto, otherPhoto = !otherPhoto]"><i class="el-icon-close" style="font-size: 20px;color:rgb(46,49,40)" /></div>
     </div>
     <div class="box" v-show="showNav">
        <div class="nav-icon" @click="colseNav()"><i class="el-icon-close" style="font-size: 18px;color:rgb(237,248,255)" /></div>
@@ -51,7 +51,23 @@
         <el-button class="select-button" size="small" @click="toPlace(allPath)">{{transportation}}</el-button>
       </div>
     </div>
-  <!-- </el-dialog> -->
+    <div class="back_add" v-show="otherPhoto">
+            <div class="threeImg">
+                <div class="Containt">
+                    <div class="iconleft"  @click="zuohua">
+                        <i class="el-icon-arrow-left" style="color:rgb(202,202,204)"></i>
+                    </div>
+                    <ul :style="{'left':calleft + 'px'}"  @mouseover="stopmove()" @mouseout="move()">
+                        <li v-for="(item,index) in superurl" :key="index" @click="changePanorama">
+                            <img  :src="item.img"/>
+                        </li>
+                    </ul>
+                    <div class="iconright" @click="youhua">
+                        <i class="el-icon-arrow-right" style="color:rgb(202,202,204)"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
   </div>
 </template>
 
@@ -71,10 +87,7 @@ export default {
       showNav: false, // 是否展示导航
       startInfo: '', // 导航起点
       endInfo: '', // 导航终点
-      showPhoto: false,
-      // Zindex: '1',
-      img: require('../assets/南_看图王.jpg'),
-      // photosphere: 'photosphere',
+      showPhoto: false, // 是否展示全景
       checkedMethod: false,
       middlePath: {
         startNode: '',
@@ -150,7 +163,54 @@ export default {
       pathSimplifierIns: null, // 导航路线
       direction: 'right',
       pointsData: [], // 存入接口数据
-      mapModel: '3D' // 通过mapmodel判断现在是在2D还是在3D
+      mapModel: '3D', // 通过mapmodel判断现在是在2D还是在3D
+      superurl: [
+        {
+          img: 'http://42.193.99.32:9800/school/web_panorama_dong.jpg'
+        },
+        {
+          img: 'http://42.193.99.32:9800/school/web_panorama_nan.jpg'
+        },
+        {
+          img: 'http://42.193.99.32:9800/school/web_panorama_xi.jpg'
+        },
+        {
+          img: 'http://42.193.99.32:9800/school/web_panorama_bei.jpg'
+        },
+        {
+          img: require('../assets/5.jpg')
+        },
+        {
+          img: require('../assets/6.jpg')
+        },
+        {
+          img: require('../assets/7.jpg')
+        },
+        {
+          img: require('../assets/8.jpeg')
+        },
+        {
+          img: require('../assets/9.jpg')
+        },
+        {
+          img: require('../assets/10.jpg')
+        },
+        {
+          img: require('../assets/11.jpg')
+        },
+        {
+          img: require('../assets/12.jpg')
+        },
+        {
+          img: require('../assets/13.jpg')
+        },
+        {
+          img: require('../assets/14.jpg')
+        }
+      ], // 轮播图url
+      calleft: 0, // 轮播图动态位置
+      timer: '', // 轮播图定时器
+      otherPhoto: false // 是否展示轮播图
     }
   },
   computed: {
@@ -159,14 +219,21 @@ export default {
   },
   created () {},
   mounted () {
-    // this.initPhoto()
-    // console.log(amap)
     this.initSchoolData() // 调取服务器接口函数
-    // this.$nextTick(() => {
-    //   this.test()
-    // })
   },
   methods: {
+    // 更换全景照片
+    changePanorama (e) {
+      // console.log(e.target.currentSrc)
+      var panoramaUrl = e.target.currentSrc
+      if (this.panoramadata) {
+        this.panoramadata.destroy()
+        clearInterval(this.timer)
+        this.$nextTick(() => {
+          this.initPhoto(panoramaUrl)
+        })
+      }
+    },
     // 改变模型函数 2D或3D
     changeModel (a) {
       if (a === '2D') {
@@ -342,6 +409,8 @@ export default {
             this.$nextTick(() => {
               this.initPhoto()
             })
+            this.otherPhoto = true
+            this.move()
             // console.log(document.getElementById('photosphere'))
           }
           // 打开导航函数
@@ -428,11 +497,11 @@ export default {
 
       // -------------------
       // 获取当前鼠标点击坐标
-      // this.map.on('click', (e) => {
-      //   console.log(e)
-      //   // this.lngMain = e.lnglat.getLng()
-      //   // this.latMain = e.lnglat.getLat()
-      // })
+      this.map.on('click', (e) => {
+        console.log(e)
+        // this.lngMain = e.lnglat.getLng()
+        // this.latMain = e.lnglat.getLat()
+      })
     },
     // 点击地图任意一点关闭信息窗体
     markerClose () {
@@ -521,6 +590,8 @@ export default {
             this.$nextTick(() => {
               this.initPhoto()
             })
+            this.otherPhoto = true
+            this.move()
             // console.log(document.getElementById('photosphere'))
           }
           // 打开导航函数
@@ -548,16 +619,27 @@ export default {
       })
     },
     // 展示全景函数
-    initPhoto () {
+    initPhoto (a) {
       // console.log(document.getElementById('photosphere'))
-      this.panoramadata = new Viewer({
-        container: document.getElementById('photosphere'),
-        panorama: this.img,
-        size: {
-          width: '100%',
-          height: '100%'
-        }
-      })
+      if (!a) {
+        this.panoramadata = new Viewer({
+          container: document.getElementById('photosphere'),
+          panorama: 'http://42.193.99.32:9800/school/web_panorama_nan.jpg',
+          size: {
+            width: '100%',
+            height: '100%'
+          }
+        })
+      } else {
+        this.panoramadata = new Viewer({
+          container: document.getElementById('photosphere'),
+          panorama: a,
+          size: {
+            width: '100%',
+            height: '100%'
+          }
+        })
+      }
     },
     // 显示导航路线函数
     toPlace (a) {
@@ -712,6 +794,34 @@ export default {
       } else {
         this.pathSimplifierIns = null
       }
+    },
+    // 轮播图
+    move () {
+      this.timer = setInterval(this.starmove, 3000)
+    },
+    // 开始移动
+    starmove () {
+      this.calleft -= 340
+      if (this.calleft < -3060) {
+        this.calleft = 0
+      }
+    },
+    // 鼠标悬停时停止移动
+    stopmove () {
+      clearInterval(this.timer)
+    },
+    zuohua () {
+      this.calleft -= 340
+      if (this.calleft < -3060) {
+        this.calleft = 0
+      }
+    },
+    // 点击按钮右移
+    youhua () {
+      this.calleft += 340
+      if (this.calleft > 0) {
+        this.calleft = -3060
+      }
     }
   }
 }
@@ -810,6 +920,7 @@ $radios-map:(
 }
 </style>
 <style lang='less' scoped>
+@import url('../style/Rotation.less');
 #photosphere{
   z-index: 2000;
   position: fixed;
