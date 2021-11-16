@@ -280,8 +280,7 @@ export default {
       ],
       map: null,
       imageLayer: null,
-      // infoWindows: [],
-      markers: [], // 点位集合
+      markers: [], // 点位集合1
       navmarkers: [], // 起点和终点
       radio: '1', // 标签绑定
       infoWindow: '', // 信息窗体
