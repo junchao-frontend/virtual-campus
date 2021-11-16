@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import Home from '../views/Home.vue'
+import Home from '../views/glodeMap/index.vue'
 import VueRouter from 'vue-router'
 
 Vue.use(VueRouter)
@@ -13,11 +13,6 @@ const routes = [
     path: '/',
     name: 'Home',
     component: Home
-  },
-  {
-    path: '/main',
-    name: 'main',
-    component: () => import('../views/main/index')
   },
   {
     path: '/login',

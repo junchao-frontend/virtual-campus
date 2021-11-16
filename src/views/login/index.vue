@@ -104,6 +104,15 @@
         </div>
       </div>
     </div>
+    <div class="return-icon" @click="returnMap">
+      <svg  t="1637028337809" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+            p-id="16107" width="100%" height="100%">
+            <path
+              fill="#fff"
+              d="M622.650611 284.901749 447.745069 284.901749 447.745069 142.823869 63.980685 334.705038l383.76336 191.882192L447.744046 384.834762l189.391465 0c149.914358 0 224.855164 62.789045 224.855164 188.368158 0 129.928165-77.435627 194.876386-232.338602 194.876386L187.952184 768.079306l0 99.93199L634.146433 868.011296c211.184817 0 316.777737-95.104031 316.777737-285.311071C950.924169 384.178823 841.510224 284.901749 622.650611 284.901749z"
+              p-id="16108"></path>
+        </svg>
+    </div>
   </div>
 </template>
 
@@ -156,6 +165,9 @@ export default {
       this.changeOverBox = !this.changeOverBox
       console.log('$event')
     },
+    returnMap () {
+      this.$router.push('/')
+    },
     submitForm (formName) {
       this.$refs[formName].validate(valid => {
         if (valid) {
@@ -185,6 +197,15 @@ export default {
   // 背景不随滚动
   background-attachment: fixed;
   position: relative;
+}
+.return-icon{
+  // color: wheat;
+  cursor: pointer;
+  width: 25px;
+  height: 25px;
+  position: fixed;
+  right: 10px;
+  top: 10px;
 }
 .card {
   box-shadow: 0 4px 18px 0 rgba(3, 3, 3,0.35), 0 6px 20px 0 rgba(26, 25, 25,0.35);
