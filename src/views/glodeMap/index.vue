@@ -619,7 +619,7 @@ export default {
       // -------------------
       // 获取当前鼠标点击坐标
       this.map.on('click', (e) => {
-        console.log(e)
+        // console.log(e)
         // this.lngMain = e.lnglat.getLng()
         // this.latMain = e.lnglat.getLat()
       })
@@ -784,9 +784,9 @@ export default {
       var fullPath = {}
       fullPath.startNode = Object.values(a)[0].join(',')
       fullPath.endNode = Object.values(a)[1].join(',')
-      console.log(fullPath)
+      // console.log(fullPath)
       getPath(fullPath).then((res) => {
-        console.log(res)
+        // console.log(res)
         const navData = res.data.data
         var navIcon = [
           {
@@ -829,7 +829,7 @@ export default {
                 // 飞行器样式
                 pathNavigatorStyle: {
                   width: 50,
-                  height: 65,
+                  height: 60,
                   strokeStyle: null,
                   fillStyle: null,
                   content: PathSimplifier.Render.Canvas.getImageContent(navmethod, onload, onerror),
@@ -970,7 +970,7 @@ export default {
       }
     },
     roleLogin () {
-      console.log('54656')
+      // console.log('54656')
       this.showLogin = !this.showLogin
     },
     onLogin () {
@@ -1153,6 +1153,12 @@ $radios-map: (
 </style>
 <style lang='less' scoped>
 @import url("../../style/Rotation.less");
+/deep/ .amap-logo{
+    opacity:0;//去掉高德地图logo
+}
+/deep/ .amap-copyright {
+    opacity:0;//去掉高德的版本号
+}
 #photosphere {
   z-index: 2000;
   position: fixed;

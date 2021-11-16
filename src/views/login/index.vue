@@ -23,7 +23,7 @@
                 <el-input
                   class="inputStyle"
                   placeholder="username"
-                  v-model="ruleFormView.account"
+                  v-model="ruleFormView.Account"
                   autocomplete="off"
                 ></el-input>
               </el-form-item>
@@ -34,14 +34,14 @@
                 <el-input
                   class="inputStyle"
                   placeholder="password"
-                  v-model="ruleFormView.password"
+                  v-model="ruleFormView.Password"
                   type="password"
                   autocomplete="off"
                 ></el-input>
               </el-form-item>
                 <el-form-item class="login">
                   <!-- 设置按钮边框 -->
-                  <button id="view" class="btnStyle" @click="submitForm('ruleFormView')">登 录</button>
+                  <button id="view" class="btnStyle" @click.prevent="vSubmit(ruleFormView)">登 录</button>
                 </el-form-item>
             </el-form>
           <!-- </div> -->
@@ -79,7 +79,7 @@
                 <el-input
                   class="inputStyle"
                   placeholder="username"
-                  v-model="ruleForm.account"
+                  v-model="ruleForm.Account"
                   autocomplete="off"
                 ></el-input>
               </el-form-item>
@@ -90,14 +90,14 @@
                 <el-input
                   class="inputStyle"
                   placeholder="password"
-                  v-model="ruleForm.password"
+                  v-model="ruleForm.Password"
                   type="password"
                   autocomplete="off"
                 ></el-input>
               </el-form-item>
                 <el-form-item class="login">
                   <!-- 设置按钮边框 -->
-                  <button id="view" class="btnStyle" @click="submitForm('ruleForm')">登 录</button>
+                  <button id="view" class="btnStyle" @click.prevent="Submit(ruleForm)">登 录</button>
                 </el-form-item>
             </el-form>
           </div>
@@ -115,8 +115,8 @@
     </div>
   </div>
 </template>
-
 <script>
+import { toLogin } from '../../api/user'
 export default {
   name: 'login',
   data () {
@@ -134,12 +134,12 @@ export default {
       changeOverBox: false,
       loginWay: 'table',
       ruleFormView: {
-        accout: '',
-        password: ''
+        Account: '',
+        Password: ''
       },
       ruleForm: {
-        accout: '',
-        password: ''
+        Account: '',
+        Password: ''
       },
       rules: {
         pass: [
@@ -163,18 +163,57 @@ export default {
   methods: {
     changeRole () {
       this.changeOverBox = !this.changeOverBox
-      console.log('$event')
+      // console.log('$event')
     },
     returnMap () {
       this.$router.push('/')
     },
-    submitForm (formName) {
-      this.$refs[formName].validate(valid => {
-        if (valid) {
-          // alert('submit!')
+    Submit (loginState) {
+      // this.$refs[formName].validate(valid => {
+      //   if (valid) {
+      //     // alert('submit!')
+      //   } else {
+      //     console.log('error submit!!')
+      //     return false
+      //   }
+      // })
+      // console.log(a)
+      toLogin(loginState).then(res => {
+        // console.log(res)
+        if (res.data.code === 200) {
+          // console.log(loginState)
+          var loginadmin  = {
+            Account: 'admin',
+            Password: 'admin'
+          }
+          if (loginState.Account === loginadmin.Account && loginState.Password === loginadmin.Password) {
+            window.location.href = 'http://42.193.99.32:8566'
+          } else {
+            alert('您输入的账号或密码不正确')
+          }
         } else {
-          console.log('error submit!!')
-          return false
+          alert('您输入的账号或密码不正确')
+        }
+      })
+    },
+    vSubmit (a) {
+      toLogin(a).then(res => {
+        // console.log(res)
+        if (res.data.code === 200) {
+          // console.log(loginState)
+          var vloginadmin = {
+            Account: 'vadmin',
+            Password: 'vadmin'
+          }
+          if (a.Account === vloginadmin.Account && a.Password === vloginadmin.Password) {
+            window.location.href = 'http://42.193.99.32:8766'
+            // window.localtion.href = '42.193.99.32:8566'
+            // window.open('42.193.99.32:8566', '_blank')
+          } else {
+            alert('您输入的账号或密码不正确')
+          }
+        } else {
+          alert('您输入的账号或密码不正确')
         }
       })
     }
