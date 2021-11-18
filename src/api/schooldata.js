@@ -14,7 +14,6 @@ export const getPath = params => {
   return request({
     method: 'GET',
     url: '/ShowPath',
-    // data用来设置POST请求体
     params
   })
 }

@@ -114,6 +114,7 @@
       <div class="bottom">
         <a class="removePath" @click="removePath">清除路线</a>
         <el-button
+          :loading="btnLoading"
           class="select-button"
           size="small"
           @click="toPlace(allPath)"
@@ -193,6 +194,7 @@
 </template>
 
 <script>
+import { startLoading, endLoading } from '../../utils/loading'
 import { Viewer } from 'photo-sphere-viewer'
 // eslint-disable-next-line no-unused-vars
 import { initData, getPath } from '../../api/schooldata'
@@ -336,7 +338,8 @@ export default {
       timer: '', // 轮播图定时器
       otherPhoto: false, // 是否展示轮播图
       showLogin: false,
-      loadingLogin: false
+      loadingLogin: false,
+      btnLoading: false // 导航按钮loading
     }
   },
   computed: {},
@@ -363,18 +366,22 @@ export default {
       if (a === '2D') {
         this.map.clearMap()
         this.map.destroy() // 销毁之前地图
+        startLoading()
         this.initMap(a) // 加载新地图
         this.radio = '1'
         this.mapModel = '2D'
         this.addLabelMarker('2D')
+        endLoading()
       } else {
         this.map.clearMap()
         this.map.destroy()
+        startLoading()
         this.initMap(a)
         this.radio = '1'
         this.mapModel = '3D'
         // 添加点标记
         this.addLabelMarker('3D')
+        endLoading()
       }
     },
     // 改变标签方向
@@ -562,6 +569,7 @@ export default {
       })
     },
     initSchoolData () {
+      startLoading()
       initData().then((res) => {
         // console.log(res)
         this.pointsData = res.data.data
@@ -569,6 +577,7 @@ export default {
         this.initMap('3D')
         // 添加点标记
         this.addLabelMarker('3D')
+        endLoading()
         // console.log(this.pointsData)
       })
     },
@@ -785,6 +794,7 @@ export default {
       fullPath.startNode = Object.values(a)[0].join(',')
       fullPath.endNode = Object.values(a)[1].join(',')
       // console.log(fullPath)
+      this.btnLoading = true
       getPath(fullPath).then((res) => {
         // console.log(res)
         const navData = res.data.data
@@ -892,6 +902,7 @@ export default {
                 position: item.position // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
               })
               this.navmarkers.push(navmarker)
+              this.btnLoading = false
             })
           }
         )
