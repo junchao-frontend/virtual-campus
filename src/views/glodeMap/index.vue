@@ -202,6 +202,7 @@ import AMap from 'AMap'
 export default {
   components: {},
   data () {
+    // console.log(this)
     return {
       // 不同导航方式不同图标
       navcar: require('../../assets/map/navcar.png'),
@@ -344,8 +345,10 @@ export default {
   },
   computed: {},
   watch: {},
-  created () {},
+  created () {
+  },
   mounted () {
+    // console.log(window)
     this.initSchoolData() // 调取服务器接口函数
   },
   methods: {
@@ -525,7 +528,6 @@ export default {
             offset: new AMap.Pixel(0, -31)
           })
           // 自定义信息窗体
-          // 自定义信息窗体
           var markerClick = (e) => {
             // console.log(item)
             infoWindow.open(this.map, e.target.getPosition())
@@ -546,7 +548,6 @@ export default {
           }
           // 打开导航函数
           window.openNav = () => {
-            // console.log(item)
             this.showNav = true
             this.startInfo = this.middleInfo
             this.allPath.startNode = this.middlePath.startNode
@@ -727,7 +728,6 @@ export default {
           }
           // 打开导航函数
           window.openNav = () => {
-            // console.log(item)
             this.showNav = true
             this.startInfo = this.middleInfo
             this.allPath.startNode = this.middlePath.startNode
@@ -774,6 +774,7 @@ export default {
     },
     // 显示导航路线函数
     toPlace (a) {
+      this.btnLoading = true
       // var pathData = a
       // var test = a.join(',')
       var navmethod // 交通方式
@@ -794,7 +795,6 @@ export default {
       fullPath.startNode = Object.values(a)[0].join(',')
       fullPath.endNode = Object.values(a)[1].join(',')
       // console.log(fullPath)
-      this.btnLoading = true
       getPath(fullPath).then((res) => {
         // console.log(res)
         const navData = res.data.data
@@ -907,6 +907,11 @@ export default {
           }
         )
       })
+        .catch(error => {
+          alert('路线出错啦!')
+          console.log(error)
+          this.btnLoading = false
+        })
       // -----------------------------------
     },
     // 改变导航交通方式
